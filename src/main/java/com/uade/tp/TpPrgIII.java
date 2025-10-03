@@ -1,13 +1,13 @@
-package com.example.demo;
+package com.uade.tp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DemoApplication {
+public class TpPrgIII {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
+		SpringApplication.run(TpPrgIII.class, args);
 	}
 
 }

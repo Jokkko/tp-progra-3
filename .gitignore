@@ -31,3 +31,41 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# =========================
+# Maven build
+# =========================
+/target/
+/.mvn/wrapper/maven-wrapper.jar
+.mvn/
+
+# =========================
+# IntelliJ IDEA
+# =========================
+.idea/
+out/
+
+# =========================
+# Logs & temp
+# =========================
+*.log
+*.tmp
+*.bak
+*.swp
+
+# =========================
+# OS-specific
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Spring Boot configs
+# =========================
+# Ignorar archivos con credenciales locales
+src/main/resources/application.properties
+src/main/resources/application.yml
+
+# Mantener un ejemplo limpio para el equipo
+!src/main/resources/application-example.properties
+!src/main/resources/application-example.yml
