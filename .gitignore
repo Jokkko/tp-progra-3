@@ -69,3 +69,4 @@ src/main/resources/application.yml
 # Mantener un ejemplo limpio para el equipo
 !src/main/resources/application-example.properties
 !src/main/resources/application-example.yml
+.env
