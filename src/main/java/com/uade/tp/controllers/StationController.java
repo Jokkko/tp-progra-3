@@ -29,8 +29,15 @@ public class StationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StationDTO> getById(@PathVariable("id") String id) throws Exception {
+    public ResponseEntity<StationDTO> getById(@PathVariable("id") String id){
         return stationService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.internalServerError().build());
+    }
+
+    @GetMapping("/line/{lineName}")
+    public ResponseEntity<List<StationDTO>> getByLine(@PathVariable("lineName") String lineName){
+        return stationService.getByLine(lineName)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
