@@ -23,4 +23,8 @@ public class StationService {
         return stationRepository.findStationById(id);
     }
 
+    public Optional<List<StationDTO>> getByLine(String lineName){
+        return stationRepository.findStationByLine(lineName);
+    }
+
 }

@@ -33,4 +33,14 @@ public interface StationRepository extends Neo4jRepository<StationNode, Long> {
             " n.id AS id"
     )
     Optional<StationDTO> findStationById(@Param("id") String id);
+
+    @Query("MATCH (n:Station) " +
+    "WITH n, [l IN labels(n) WHERE l <> 'Station'][0] AS lineLabel " +
+    "WHERE lineLabel = $line " +
+    " RETURN " +
+    " n.name AS name, " +
+    " lineLabel AS line, " +
+    " n.id AS id"
+    )
+    Optional<List<StationDTO>> findStationByLine(@Param("line") String line);
 }
