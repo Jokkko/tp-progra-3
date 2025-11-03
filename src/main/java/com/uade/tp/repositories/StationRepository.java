@@ -43,4 +43,9 @@ public interface StationRepository extends Neo4jRepository<StationNode, Long> {
     " n.id AS id"
     )
     Optional<List<StationDTO>> findStationByLine(@Param("line") String line);
+
+    @Query("MATCH (n)" +
+    "RETURN DISTINCT labels(n)[1]"
+    )
+    Optional<List<String>>  getAllLines();
 }
