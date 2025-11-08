@@ -56,4 +56,13 @@ RETURN a.name AS from, b.name AS to
 """)
     List<ConnectionDTO> findAllConnections();
 
+    @Query("MATCH (n:Station)-[]-(m:Station) " +
+            "WITH m, [l IN labels(m) WHERE l <> 'Station'][0] AS lineLabel " +
+                    "WHERE n.id = $id " +
+                    "RETURN DISTINCT " +
+                    " m.name AS name, " +
+                    " lineLabel AS line, " +
+                    " m.id AS id"
+    )
+    Optional<List<StationDTO>> getNeighbors(@Param("id") String id);
 }

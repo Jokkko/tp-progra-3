@@ -15,6 +15,9 @@ public class StationNode {
     @Property("name")
     private String name;
 
+    @Property("id")
+    private String id;
+
     public StationNode() {
     }
 
