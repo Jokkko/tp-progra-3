@@ -1,6 +1,7 @@
 package com.uade.tp.repositories;
 
 
+import com.uade.tp.dtos.ConnectionDTO;
 import com.uade.tp.dtos.StationDTO;
 import com.uade.tp.models.StationNode;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -48,4 +49,11 @@ public interface StationRepository extends Neo4jRepository<StationNode, Long> {
     "RETURN DISTINCT labels(n)[1]"
     )
     Optional<List<String>>  getAllLines();
+
+    @Query("""
+MATCH (a:Station)-[r:NEXT_STATION|TRANSFER]-(b:Station)
+RETURN a.name AS from, b.name AS to
+""")
+    List<ConnectionDTO> findAllConnections();
+
 }
