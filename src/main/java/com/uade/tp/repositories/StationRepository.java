@@ -2,6 +2,7 @@ package com.uade.tp.repositories;
 
 
 import com.uade.tp.dtos.ConnectionDTO;
+import com.uade.tp.dtos.NeighborDTO;
 import com.uade.tp.dtos.StationDTO;
 import com.uade.tp.models.StationNode;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -65,4 +67,10 @@ RETURN a.name AS from, b.name AS to
                     " m.id AS id"
     )
     Optional<List<StationDTO>> getNeighbors(@Param("id") String id);
+
+    @Query("""
+MATCH (a:Station {id: $id})- [r:NEXT_STATION] -> (b:Station)
+RETURN b.id AS id, b.name AS name, r.time AS time
+""")
+    List<Map<String, Object>> findNeighborsWithTime(@Param("id") String id);
 }
