@@ -92,4 +92,89 @@ public class PathService {
         // Si ningún camino lleva al destino, retorna falso.
         return false;
     }
+
+    /**
+     * (BACKTRACKING)
+     * Encuentra TODAS las rutas simples entre dos estaciones (sin ciclos).
+     * COMPLEJIDAD:   O(V! · V)
+     * - El algoritmo debe explorar TODAS las rutas simples posibles.
+     * - En un grafo denso, el número de rutas simples entre dos nodos es O(V!).
+     * - Cada vez que se encuentra un camino, se copia la lista → O(V).
+     * Por lo tanto:
+     *      Tiempo total = cantidad de rutas  ×  costo de copiarlas
+     *                    = O(V!) × O(V)
+     *                    = O(V! · V)
+     *
+     * COMPLEJIDAD ESPACIAL:   O(V)  (sin contar las soluciones)
+     * - visited: hasta V nodos
+     * - currentPath: hasta V nodos
+     * - stack recursiva: profundidad ≤ V
+     *
+     * SI CONTAMOS el almacenamiento de todas las rutas:
+     *
+     *      O(V! · V)
+     *
+     * porque se guardan O(V!) caminos de largo O(V).
+     *
+     * Este problema es EXPONENCIAL e inherentemente no optimizable,
+     * ya que se pide explícitamente devolver TODAS las rutas.
+     */
+    public List<List<String>> findAllSimplePaths(String start, String end) {
+
+        // 1. Construir grafo desde Neo4j (O(E))
+        List<ConnectionDTO> connections = stationRepository.findAllConnections();
+        Map<String, List<String>> graph = new HashMap<>();
+
+        for (ConnectionDTO c : connections) {
+            graph.computeIfAbsent(c.from(), k -> new ArrayList<>()).add(c.to());
+            graph.computeIfAbsent(c.to(), k -> new ArrayList<>()).add(c.from());
+        }
+
+        // Lista donde se guardan TODAS las rutas encontradas → puede crecer a O(V! · V)
+        List<List<String>> results = new ArrayList<>();
+
+        // Estructuras auxiliares para el backtracking (O(V) espacio)
+        Set<String> visited = new HashSet<>();
+        List<String> currentPath = new ArrayList<>();
+
+        // Llamada inicial
+        backtrack(start, end, graph, visited, currentPath, results);
+
+        return results;
+    }
+
+
+    /**
+     * Backtracking puro para generar rutas simples.
+     * COMPLEJIDAD DE ESTE MÉTODO: O(V! · V) explicada arriba.
+     */
+    private void backtrack(
+            String current,
+            String target,
+            Map<String, List<String>> graph,
+            Set<String> visited,
+            List<String> currentPath,
+            List<List<String>> results
+    ) {
+        // Agregar nodo actual al camino (O(1))
+        visited.add(current);
+        currentPath.add(current);
+
+        // Caso base: si llegamos al destino → copiar camino O(V)
+        if (current.equals(target)) {
+            results.add(new ArrayList<>(currentPath)); // copia de tamaño ≤ V → O(V)
+        } else {
+            // Recorrer vecinos (en total V nodos, E aristas)
+            for (String neighbor : graph.getOrDefault(current, List.of())) {
+                // Evitar ciclos
+                if (!visited.contains(neighbor)) {
+                    backtrack(neighbor, target, graph, visited, currentPath, results);
+                }
+            }
+        }
+
+        // BACKTRACK: remover nodo actual antes de volver (O(1))
+        visited.remove(current);
+        currentPath.remove(currentPath.size() - 1);
+    }
 }

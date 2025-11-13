@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/path")
 public class PathController {
@@ -21,5 +23,14 @@ public class PathController {
     public ResponseEntity<Boolean> existsPath(@PathVariable String from, @PathVariable String to) {
         boolean exists = pathService.existsPathDFS(from, to);
         return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/all-paths/{from}/{to}")
+    public ResponseEntity<List<List<String>>> getAllSimplePaths(
+            @PathVariable String from,
+            @PathVariable String to) {
+
+        List<List<String>> paths = pathService.findAllSimplePaths(from, to);
+        return ResponseEntity.ok(paths);
     }
 }
