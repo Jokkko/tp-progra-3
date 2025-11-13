@@ -1,6 +1,8 @@
 package com.uade.tp.services;
 
 import com.uade.tp.dtos.ConnectionDTO;
+import com.uade.tp.dtos.NeighborDTO;
+import com.uade.tp.dtos.StationDTO;
 import com.uade.tp.repositories.StationRepository;
 import org.springframework.stereotype.Service;
 
