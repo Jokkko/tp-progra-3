@@ -46,4 +46,16 @@ public class StationController {
         return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
 
     }
+
+    @GetMapping("/fastest/{fromId}/{toId}")
+    public ResponseEntity<?> getFastestRoute(
+            @PathVariable String fromId,
+            @PathVariable String toId
+    ) {
+        var result = stationService.minimumTimeDijkstra(fromId, toId);
+
+        return result
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }
