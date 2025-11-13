@@ -68,9 +68,18 @@ RETURN a.name AS from, b.name AS to
     )
     Optional<List<StationDTO>> getNeighbors(@Param("id") String id);
 
-    @Query("""
-MATCH (a:Station {id: $id})- [r:NEXT_STATION] -> (b:Station)
-RETURN b.id AS id, b.name AS name, r.time AS time
-""")
+    @Query("MATCH (a:Station {id: $id})- [r:NEXT_STATION] -> (b:Station) " +
+            "RETURN b.id AS id, b.name AS name, r.time AS time"
+    )
+    List<Map<String, Object>> findNeighborsWithTime(@Param("id") String id);
+
+    @Query("MATCH (s:Station)" +
+            "RETURN s.id AS id, s.name AS name, s.interest AS interest, 5 AS time"
+    )
+    List<Map<String,Object>> findKnapsackItems();
+           
+    @Query("MATCH (a:Station {id: $id})- [r:NEXT_STATION] -> (b:Station)" + 
+           "RETURN b.id AS id, b.name AS name, r.time AS time"
+    )
     List<Map<String, Object>> findNeighborsWithTime(@Param("id") String id);
 }
