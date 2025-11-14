@@ -68,4 +68,13 @@ public class StationController {
         return result.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+
+    @GetMapping("/tsp")
+    public ResponseEntity<?> tsp(@RequestParam List<String> ids) {
+        var result = stationService.tspBranchAndBound(ids);
+        return result.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
 }
