@@ -18,60 +18,13 @@ public class KnapsackService {
         this.stationRepository = stationRepository;
     }
 
-    /**
-     * Resuelve el problema de la mochila 0/1 usando Programación Dinámica.
-     *
-     * Cada estación se modela como un "item" con:
-     *  - peso  = time  (tiempo asociado a la estación)
-     *  - valor = interest (puntos de interés)
-     *
-     * Parámetros:
-     *  - timeLimit: capacidad máxima de la mochila (tiempo total permitido).
-     *
-     * Notación:
-     *   n = cantidad de estaciones (items)
-     *   T = timeLimit
-     *
-     * COMPLEJIDAD:
-     *   - Se construye una tabla dp de tamaño (n+1) × (T+1).
-     *   - Dos bucles anidados:
-     *       for i in [1..n]:
-     *         for t in [0..T]:
-     *           operaciones O(1)
-     *   => O(n · T)
-     *
-     *   - Fase de reconstrucción del subconjunto óptimo:
-     *       for i en [n..1]:
-     *         operaciones O(1)
-     *     => O(n)
-     *
-     *   - Costo total dominante: O(n · T)
-     *
-     *   - La matriz dp tiene tamaño (n+1) × (T+1):
-     *       => O(n · T)
-     *   - Estructuras auxiliares (listas, arrays weight y value) son O(n).
-     *   - Espacio total: O(n · T).
-     */
     public List<KnapsackItemDTO> maximizeInterest(int timeLimit) {
 
-        // 1) Cargar items desde la base de datos.
-        //    Este paso es O(n) respecto a la cantidad de estaciones retornadas.
-        List<Map<String,Object>> rows = stationRepository.findKnapsackItems();
-        List<KnapsackItemDTO> items = new ArrayList<>();
-
-        for (Map<String,Object> r : rows) {
-            items.add(new KnapsackItemDTO(
-                    (String) r.get("id"),
-                    (String) r.get("name"),
-                    ((Number) r.get("interest")).intValue(),
-                    ((Number) r.get("time")).intValue()
-            ));
-        }
-
+        // Neo4j ya devuelve directamente la lista de DTO
+        List<KnapsackItemDTO> items = stationRepository.findKnapsackItems();
         int n = items.size();
 
-        // Arrays auxiliares para pesos (tiempo) y valores (interés).
-        // Espacio: O(n)
+        // Arrays auxiliares para DP
         int[] weight = new int[n];
         int[] value  = new int[n];
 
@@ -80,53 +33,37 @@ public class KnapsackService {
             value[i]  = items.get(i).interest();
         }
 
-        // 2) Tabla de Programación Dinámica.
-        // dp[i][t] = máximo interés usando las primeras i estaciones
-        //            con un tiempo máximo t.
-        //
-        // Tamaño de la matriz: (n+1) × (timeLimit+1) => O(n · T) espacio.
+        // DP table
         int[][] dp = new int[n + 1][timeLimit + 1];
 
-        // Construcción de la DP.
-        // Bucle externo: recorre n items.
-        // Bucle interno: recorre T+1 capacidades de tiempo.
-        //
-        // Complejidad temporal: O(n · T).
         for (int i = 1; i <= n; i++) {
-            int w = weight[i - 1];  // peso del ítem i
-            int v = value[i - 1];   // valor del ítem i
+            int w = weight[i - 1];
+            int v = value[i - 1];
 
             for (int t = 0; t <= timeLimit; t++) {
-                // Caso en el que NO tomamos el ítem i:
-                dp[i][t] = dp[i - 1][t];
+                dp[i][t] = dp[i - 1][t]; // no tomar
 
-                // Caso en el que SÍ tomamos el ítem i (si entra en el tiempo t):
                 if (w <= t) {
                     dp[i][t] = Math.max(
-                            dp[i][t],                     // no tomarlo
-                            dp[i - 1][t - w] + v          // tomarlo
+                            dp[i][t],
+                            dp[i - 1][t - w] + v
                     );
                 }
             }
         }
 
-        // 3) Reconstrucción del subconjunto óptimo de estaciones.
-        // Recorremos la matriz desde dp[n][timeLimit] hacia atrás,
-        // verificando qué ítems fueron incluidos.
-        // Complejidad de esta fase: O(n).
+        // Reconstrucción de solución óptima
         List<KnapsackItemDTO> chosen = new ArrayList<>();
         int t = timeLimit;
 
         for (int i = n; i > 0; i--) {
-            // Si dp[i][t] es distinto de dp[i-1][t], significa que el ítem i fue elegido.
             if (dp[i][t] != dp[i - 1][t]) {
                 KnapsackItemDTO it = items.get(i - 1);
                 chosen.add(it);
-                t -= weight[i - 1]; // reducimos la capacidad restante
+                t -= weight[i - 1];
             }
         }
 
-        // Invertimos la lista para mantener el orden original de selección.
         Collections.reverse(chosen);
         return chosen;
     }
