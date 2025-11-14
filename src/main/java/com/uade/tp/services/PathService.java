@@ -119,9 +119,10 @@ public class PathService {
      * Este problema es EXPONENCIAL e inherentemente no optimizable,
      * ya que se pide explícitamente devolver TODAS las rutas.
      */
-    public List<List<String>> findAllSimplePaths(String start, String end) {
+    public List<List<String>> findAllSimplePaths(String start, String end, Integer maxDepth) {
 
-        // 1. Construir grafo desde Neo4j (O(E))
+        int depthLimit = (maxDepth != null) ? maxDepth : 20;
+
         List<ConnectionDTO> connections = stationRepository.findAllConnections();
         Map<String, List<String>> graph = new HashMap<>();
 
@@ -130,19 +131,30 @@ public class PathService {
             graph.computeIfAbsent(c.to(), k -> new ArrayList<>()).add(c.from());
         }
 
-        // Lista donde se guardan TODAS las rutas encontradas → puede crecer a O(V! · V)
         List<List<String>> results = new ArrayList<>();
-
-        // Estructuras auxiliares para el backtracking (O(V) espacio)
         Set<String> visited = new HashSet<>();
         List<String> currentPath = new ArrayList<>();
 
-        // Llamada inicial
-        backtrack(start, end, graph, visited, currentPath, results);
+        backtrack(start, end, graph, visited, currentPath, results, 0, depthLimit);
 
-        return results;
+        return removeDuplicatePaths(results);
     }
 
+    private List<List<String>> removeDuplicatePaths(List<List<String>> paths) {
+
+        Set<String> seen = new LinkedHashSet<>();
+        List<List<String>> deduped = new ArrayList<>();
+
+        for (List<String> path : paths) {
+            String key = String.join("->", path); // clave única del camino
+
+            if (seen.add(key)) {           // agrega solo si no existe
+                deduped.add(path);         // conservar camino original
+            }
+        }
+
+        return deduped;
+    }
 
     /**
      * Backtracking puro para generar rutas simples.
@@ -154,27 +166,29 @@ public class PathService {
             Map<String, List<String>> graph,
             Set<String> visited,
             List<String> currentPath,
-            List<List<String>> results
+            List<List<String>> results,
+            int depth,
+            int maxDepth
     ) {
-        // Agregar nodo actual al camino (O(1))
+        if (depth > maxDepth) {
+            return;
+        }
+
         visited.add(current);
         currentPath.add(current);
 
-        // Caso base: si llegamos al destino → copiar camino O(V)
         if (current.equals(target)) {
-            results.add(new ArrayList<>(currentPath)); // copia de tamaño ≤ V → O(V)
+            results.add(new ArrayList<>(currentPath));
         } else {
-            // Recorrer vecinos (en total V nodos, E aristas)
             for (String neighbor : graph.getOrDefault(current, List.of())) {
-                // Evitar ciclos
                 if (!visited.contains(neighbor)) {
-                    backtrack(neighbor, target, graph, visited, currentPath, results);
+                    backtrack(neighbor, target, graph, visited, currentPath, results, depth + 1, maxDepth);
                 }
             }
         }
 
-        // BACKTRACK: remover nodo actual antes de volver (O(1))
         visited.remove(current);
         currentPath.remove(currentPath.size() - 1);
     }
+
 }
