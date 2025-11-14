@@ -180,19 +180,22 @@ public class StationService {
         return route.isEmpty() ? Optional.empty() : Optional.of(route);
     }
 
-
-    // ---------- Otros helpers ----------
-
-    public String stationIdByName(String name) {
-        return stationRepository.findStationByName(name)
-                .map(StationDTO::id)
-                .orElseThrow(() -> new RuntimeException("Station not found: " + name));
-    }
-
-
-    // ---------- Dijkstra (mínimo tiempo) ----------
-
-    public Optional<List<StationDTO>> minimumTimeDijkstra(String fromId, String toId) {
+    /**
+     * Encuentra la ruta más rápida (menor tiempo total) entre dos estaciones usando
+     * el algoritmo de Dijkstra.
+     *
+     * COMPLEJIDAD:
+     *      V = cantidad de estaciones (nodos)
+     *      E = cantidad de conexiones (aristas NEXT_STATION)
+     *
+     * - Extraer el mínimo de la PriorityQueue cuesta O(log V)
+     * - Relajar cada arista cuesta O(1)
+     * - Iteramos cada arista como mucho una vez → O(E)
+     *
+     * COMPLEJIDAD TOTAL:
+     *   O( (V + E) · log V )
+     */
+    public List<StationDTO> minimumTimeDijkstra(String fromId, String toId) {
 
         Map<String, Integer> dist = new HashMap<>();
         Map<String, String> parent = new HashMap<>();
@@ -228,18 +231,33 @@ public class StationService {
         }
 
         if (!dist.containsKey(toId)) {
-            return Optional.empty();
+            return List.of(); // lista vacía → no hay camino
         }
 
         LinkedList<StationDTO> path = new LinkedList<>();
         String current = toId;
 
         while (current != null) {
-            stationRepository.findStationById(current).ifPresent(path::addFirst);
+            List<StationDTO> stations = stationRepository.findStationByIdd(current);
+
+            if (!stations.isEmpty()) {
+                path.addFirst(stations.get(0));
+            }
+
             current = parent.get(current);
         }
 
-        return Optional.of(path);
+
+        return path;
     }
 
+    public String stationIdByName(String name) {
+        List<StationDTO> results = stationRepository.findStationByName(name);
+
+        if (results.isEmpty()) {
+            throw new RuntimeException("Station not found: " + name);
+        }
+
+        return results.getFirst().id();
+    }
 }
