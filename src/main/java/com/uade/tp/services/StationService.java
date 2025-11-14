@@ -1,5 +1,6 @@
 package com.uade.tp.services;
 
+import com.uade.tp.dtos.NeighborDTO;
 import com.uade.tp.dtos.StationDTO;
 import com.uade.tp.repositories.StationRepository;
 import org.springframework.stereotype.Service;
@@ -101,59 +102,43 @@ public class StationService {
      */
     public Optional<List<StationDTO>> minimumTimeDijkstra(String fromId, String toId) {
 
-        // Distancia mínima conocida a cada nodo (inicialmente infinito excepto origen)
         Map<String, Integer> dist = new HashMap<>();
-
-        // Mapa para reconstruir el camino más corto
         Map<String, String> parent = new HashMap<>();
-
-        // Inicializar distancia del nodo inicial
         dist.put(fromId, 0);
 
-        // PriorityQueue ordenada por distancia acumulada
-        // COMPLEJIDAD O(log V) por inserción/extracción
-        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingInt(dist::get));
+        PriorityQueue<String> pq =
+                new PriorityQueue<>(Comparator.comparingInt(dist::get));
         pq.add(fromId);
 
-        // Seguimiento de nodos ya procesados
         Set<String> visited = new HashSet<>();
 
         while (!pq.isEmpty()) {
-            String current = pq.poll(); // O(log V)
-
-            // Evitar reprocesar nodos
+            String current = pq.poll();
             if (visited.contains(current)) continue;
             visited.add(current);
 
-            // Si llegamos al destino, terminamos
             if (current.equals(toId)) break;
 
-            // Obtener vecinos con sus tiempos
-            // Cada estación tiene un set pequeño de vecinos → O(1) amortizado
-            List<Map<String, Object>> neighbors = stationRepository.findNeighborsWithTime(current);
+            List<NeighborDTO> neighbors = stationRepository.findNeighborsWithTime(current);
 
-            for (Map<String, Object> n : neighbors) {
-                String neighborId = (String) n.get("id");
-                int time = ((Number) n.get("time")).intValue();
+            for (NeighborDTO n : neighbors) {
+                String neighborId = n.id();
+                int time = n.time();
 
-                // RELAJACIÓN
                 int newDist = dist.get(current) + time;
 
-                // Si mejoramos distancia, actualizamos
                 if (newDist < dist.getOrDefault(neighborId, Integer.MAX_VALUE)) {
-                    dist.put(neighborId, newDist);     // O(1)
-                    parent.put(neighborId, current);   // O(1)
-                    pq.add(neighborId);                // O(log V)
+                    dist.put(neighborId, newDist);
+                    parent.put(neighborId, current);
+                    pq.add(neighborId);
                 }
             }
         }
 
-        // Si nunca alcanzamos destino → no existe camino
         if (!dist.containsKey(toId)) {
             return Optional.empty();
         }
 
-        // Reconstrucción del camino desde el destino hacia atrás
         LinkedList<StationDTO> path = new LinkedList<>();
         String current = toId;
 
@@ -161,6 +146,13 @@ public class StationService {
             stationRepository.findStationById(current).ifPresent(path::addFirst);
             current = parent.get(current);
         }
+
         return Optional.of(path);
+    }
+
+    public String stationIdByName(String name) {
+        return stationRepository.findStationByName(name)
+                .map(StationDTO::getId)
+                .orElseThrow(() -> new RuntimeException("Station not found: " + name));
     }
 }
