@@ -8,7 +8,7 @@ import java.util.Optional;
 
 @Service
 public class LineService {
-    private StationRepository stationRepository;
+    private final StationRepository stationRepository;
 
     public LineService(StationRepository stationRepository) {
         this.stationRepository = stationRepository;
