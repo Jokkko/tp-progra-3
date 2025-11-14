@@ -100,7 +100,7 @@ public class StationService {
      * COMPLEJIDAD TOTAL:
      *   O( (V + E) · log V )
      */
-    public Optional<List<StationDTO>> minimumTimeDijkstra(String fromId, String toId) {
+    public List<StationDTO> minimumTimeDijkstra(String fromId, String toId) {
 
         Map<String, Integer> dist = new HashMap<>();
         Map<String, String> parent = new HashMap<>();
@@ -136,23 +136,33 @@ public class StationService {
         }
 
         if (!dist.containsKey(toId)) {
-            return Optional.empty();
+            return List.of(); // lista vacía → no hay camino
         }
 
         LinkedList<StationDTO> path = new LinkedList<>();
         String current = toId;
 
         while (current != null) {
-            stationRepository.findStationById(current).ifPresent(path::addFirst);
+            List<StationDTO> stations = stationRepository.findStationByIdd(current);
+
+            if (!stations.isEmpty()) {
+                path.addFirst(stations.get(0));
+            }
+
             current = parent.get(current);
         }
 
-        return Optional.of(path);
+
+        return path;
     }
 
     public String stationIdByName(String name) {
-        return stationRepository.findStationByName(name)
-                .map(StationDTO::getId)
-                .orElseThrow(() -> new RuntimeException("Station not found: " + name));
+        List<StationDTO> results = stationRepository.findStationByName(name);
+
+        if (results.isEmpty()) {
+            throw new RuntimeException("Station not found: " + name);
+        }
+
+        return results.get(0).getId();
     }
 }

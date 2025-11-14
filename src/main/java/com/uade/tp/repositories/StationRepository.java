@@ -91,10 +91,22 @@ RETURN
 
     @Query("""
 MATCH (s:Station {name: $name})
-WITH s, [l IN labels(s) WHERE l <> 'Station'][0] AS lineLabel
+WITH DISTINCT s, [l IN labels(s) WHERE l <> 'Station'][0] AS lineLabel
 RETURN s.name AS name, lineLabel AS line, s.id AS id
-LIMIT 1
 """)
-    Optional<StationDTO> findStationByName(@Param("name") String name);
+    List<StationDTO> findStationByName(String name);
+
+
+    @Query("""
+MATCH (n:Station)
+WHERE n.id = $id
+WITH DISTINCT n, [l IN labels(n) WHERE l <> 'Station'][0] AS lineLabel
+RETURN 
+  n.name AS name,
+  lineLabel AS line,
+  n.id AS id
+""")
+    List<StationDTO> findStationByIdd(@Param("id") String id);
+
 
 }

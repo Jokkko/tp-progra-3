@@ -55,9 +55,13 @@ public class StationController {
         String fromId = stationService.stationIdByName(from);
         String toId   = stationService.stationIdByName(to);
 
-        var result = stationService.minimumTimeDijkstra(fromId, toId);
+        List<StationDTO> result = stationService.minimumTimeDijkstra(fromId, toId);
 
-        return result.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (result.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(result);
     }
+
 }
