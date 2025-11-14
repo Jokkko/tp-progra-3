@@ -19,11 +19,19 @@ public class StationController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<StationDTO>> getAllStations() {
-        return stationService.getAllStations()
+    public ResponseEntity<List<StationDTO>> getAllStations(
+            @RequestParam(value = "sorted", required = false, defaultValue = "false")
+            boolean sorted
+    ) {
+        Optional<List<StationDTO>> result = sorted
+                        ? stationService.getAllStationsSortedByName()
+                        : stationService.getAllStations();
+
+        return result
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.internalServerError().build());
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<StationDTO> getById(@PathVariable("id") String id){

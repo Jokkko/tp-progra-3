@@ -155,4 +155,98 @@ public class StationService {
                 .map(StationDTO::getId)
                 .orElseThrow(() -> new RuntimeException("Station not found: " + name));
     }
+
+
+    public Optional<List<StationDTO>> getAllStationsSortedByName() {
+        Optional<List<StationDTO>> stationsOpt = stationRepository.findAllStationsAsDTO();
+
+        if (stationsOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        List<StationDTO> stations = new ArrayList<>(stationsOpt.get());
+
+        mergeSortStations(stations, 0, stations.size() - 1);
+
+        return Optional.of(stations);
+    }
+
+    /**
+     * Ordena la lista de estaciones por nombre usando MergeSort.
+     * COMPLEJIDAD:
+     *  - Tiempo:  O(n log n)
+     *  - Espacio: O(n) por las listas auxiliares en el merge.
+     */
+    private void mergeSortStations(List<StationDTO> stations, int left, int right) {
+        if (left >= right) {
+            return; // caso base: 1 elemento
+        }
+
+        int mid = left + (right - left) / 2;
+
+        // Divide
+        mergeSortStations(stations, left, mid);
+        mergeSortStations(stations, mid + 1, right);
+
+        // Conquista + combinación
+        merge(stations, left, mid, right);
+    }
+
+    /**
+     * Combina dos sublistas ordenadas:
+     *  - [left, mid]
+     *  - [mid+1, right]
+     * en una sola sublista ordenada por nombre.
+     */
+    private void merge(List<StationDTO> stations, int left, int mid, int right) {
+
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
+
+        List<StationDTO> leftList = new ArrayList<>(n1);
+        List<StationDTO> rightList = new ArrayList<>(n2);
+
+        for (int i = 0; i < n1; i++) {
+            leftList.add(stations.get(left + i));
+        }
+        for (int j = 0; j < n2; j++) {
+            rightList.add(stations.get(mid + 1 + j));
+        }
+
+        int i = 0;      // índice en leftList
+        int j = 0;      // índice en rightList
+        int k = left;   // índice en lista original
+
+        // Merge clásico: elegimos el menor entre los dos punteros
+        while (i < n1 && j < n2) {
+
+            String nameLeft = leftList.get(i).getName();
+            String nameRight = rightList.get(j).getName();
+
+            // Orden alfabético (ascendente)
+            if (nameLeft.compareToIgnoreCase(nameRight) <= 0) {
+                stations.set(k, leftList.get(i));
+                i++;
+            } else {
+                stations.set(k, rightList.get(j));
+                j++;
+            }
+            k++;
+        }
+
+        // Copiamos cualquier resto de la izquierda
+        while (i < n1) {
+            stations.set(k, leftList.get(i));
+            i++;
+            k++;
+        }
+
+        // Copiamos cualquier resto de la derecha
+        while (j < n2) {
+            stations.set(k, rightList.get(j));
+            j++;
+            k++;
+        }
+    }
+
+
 }
